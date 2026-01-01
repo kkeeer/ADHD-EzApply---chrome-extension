@@ -1,10 +1,10 @@
 import { useDraggable } from '@dnd-kit/core';
-import { Flame, ExternalLink, Trash2 } from 'lucide-react'; // ✨ 引入垃圾桶
+import { Flame, ExternalLink, Trash2 } from 'lucide-react';
 import { Job } from '../utils/storage';
 
 interface JobCardProps {
   job: Job;
-  onDelete?: (id: string) => void; // ✨ 新增删除功能入口
+  onDelete?: (id: string) => void;
 }
 
 function formatTimeAgo(timestamp: number): string {
@@ -33,13 +33,18 @@ export function JobCard({ job, onDelete }: JobCardProps) {
     if (job.url) chrome.tabs.create({ url: job.url });
   };
 
-  // ✨ 删除处理函数
   const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 防止触发拖拽
+    e.stopPropagation();
     if (confirm('Delete this job permanently?')) {
       onDelete?.(job.id);
     }
   };
+
+  // ✨✨✨ 关键修改：万能兼容获取 Note ✨✨✨
+  // 1. 优先取 job.note (新数据)
+  // 2. 如果没有，取 job.notes (旧数据，如果有的话)
+  // 3. 强行转换类型 (as any) 避免 TypeScript 报错
+  const displayNote = job.note || (job as any).notes;
 
   return (
     <div
@@ -60,15 +65,19 @@ export function JobCard({ job, onDelete }: JobCardProps) {
       
       <p className="text-slate-600 text-sm mb-2">{job.company}</p>
       
-      {job.notes && (
-        <p className="text-slate-500 text-xs mb-3 line-clamp-2">{job.notes}</p>
+      {/* ✨✨✨ 这里只要 displayNote 有值，就一定会渲染！ ✨✨✨ */}
+      {displayNote && (
+        <div className="mb-3 p-2 bg-slate-50 rounded border border-slate-100">
+          <p className="text-slate-500 text-xs line-clamp-3 italic">
+            {displayNote}
+          </p>
+        </div>
       )}
       
       <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50">
         <span className="text-[10px] text-slate-400 font-medium">{formatTimeAgo(job.createdAt)}</span>
         
         <div className="flex gap-1">
-          {/* ✨ 只有传了 onDelete 才会显示删除按钮 */}
           {onDelete && (
             <button
               onClick={handleDelete}
@@ -95,6 +104,7 @@ export function JobCard({ job, onDelete }: JobCardProps) {
     </div>
   );
 }
+
 
 
 

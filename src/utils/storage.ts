@@ -3,7 +3,7 @@ export interface Job {
   title: string;
   company: string;
   url: string;
-  notes: string;
+  note: string;
   priority: boolean;
   status: 'inbox' | 'applied' | 'archive';
   createdAt: number;
