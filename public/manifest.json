@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "ADHD EzApply: Job Tracker",
+  "name": "EzApply: ADHD Apply Tracker",
   "short_name": "EzApply",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "author": "KeerLi",
-  "description": "Capture and track job applications with minimal friction and gamified feedback",
+  "description": "Friction-free job application tracking designed for ADHD minds. Boost efficiency with instant capture and gamified feedback",
   "permissions": [
     "storage",
     "tabs",

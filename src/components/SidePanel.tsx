@@ -9,32 +9,50 @@ export const SidePanel = () => {
   const [priority, setPriority] = useState(false);
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
 
-  // 🕵️‍♂️ 间谍函数 (保持不变，因为逻辑本身没问题)
   const domScraper = () => {
-    // 1. 优先检查用户是否高亮了文字
+    // 1. 用户手动划词 (优先级绝对第一)
     const selection = window.getSelection()?.toString().trim();
     if (selection && selection.length > 0) {
-      return {
-        title: selection,
-        company: "",
-        isSelection: true // 标记：这是用户手动选的，优先级最高！
-      };
+      return { title: selection, company: "", isSelection: true };
     }
 
-    // 2. 自动抓取策略
-    const getText = (selector: string) => document.querySelector(selector)?.textContent?.trim() || null;
+    const getText = (selector: string) => {
+      const el = document.querySelector(selector);
+      // 有些网站标题里会混入 <span class="visually-hidden">，只取可见文本稍微复杂点
+      // 这里用简单版：直接取 textContent
+      return el?.textContent?.trim() || null;
+    };
     
-    // 尝试抓取 H1 或特定 Class
+    // 2. 自动抓取策略 (✨✨✨ 关键修改：调整了优先级顺序 ✨✨✨)
+    // 越具体的 CSS Class 放越前面，通用的 h1 放最后
     const titleSelectors = [
-      'h1', 
-      '.job-details-jobs-unified-top-card__job-title',
-      '.jobs-unified-top-card__job-title',
-      '[class*="job-title"]'
+      // --- Indeed 专区 (必须放最前面！) ---
+      '[data-testid="jobsearch-JobInfoHeader-title"]', // Indeed 新版最稳的 ID
+      '.jobsearch-JobInfoHeader-title',                // Indeed 通用类名
+      
+      // --- LinkedIn 专区 ---
+      '.job-details-jobs-unified-top-card__job-title', // LinkedIn 详情页
+      '.jobs-unified-top-card__job-title',             // LinkedIn 列表页
+      
+      // --- 通用/模糊匹配 ---
+      '[class*="job-title"]',
+      '[class*="JobTitle"]',
+      
+      // --- 最后的兜底 (一定要放最后！) ---
+      'h1' 
     ];
 
     const companySelectors = [
+      // --- Indeed 专区 ---
+      '[data-testid="inlineHeader-companyName"]',      // Indeed 新版
+      '[data-company-name="true"]',
+      '.jobsearch-CompanyInfoContainer a',
+      
+      // --- LinkedIn 专区 ---
       '.job-details-jobs-unified-top-card__company-name',
       '.jobs-unified-top-card__company-name',
+      
+      // --- 通用 ---
       '[class*="company-name"]',
       'a[href*="/company/"]'
     ];
@@ -42,7 +60,7 @@ export const SidePanel = () => {
     let foundTitle = null;
     for (const s of titleSelectors) {
       foundTitle = getText(s);
-      if (foundTitle) break;
+      if (foundTitle) break; // 一旦找到专用的，马上停止，防止被后面的 h1 覆盖
     }
 
     let foundCompany = null;
@@ -52,7 +70,7 @@ export const SidePanel = () => {
     }
 
     return {
-      title: foundTitle, // 这里不返回 document.title，防止内层 frame 返回空标题干扰
+      title: foundTitle,
       company: foundCompany,
       isSelection: false
     };
@@ -65,59 +83,54 @@ export const SidePanel = () => {
       setUrl(tab.url || '');
 
       try {
-        // ✨✨✨ 关键修改：开启全图透视 (allFrames: true) ✨✨✨
-        // 这会让脚本在页面里的每一个“小房间”里都跑一遍
         const results = await chrome.scripting.executeScript({
           target: { tabId: tab.id, allFrames: true }, 
           func: domScraper,
         });
 
-        // 🕵️‍♂️ 结果筛选逻辑：从所有房间的报告里，找出最有用的那个
+        // 结果筛选逻辑
         let bestResult = null;
-
-        // 🥇 第一名：如果有个房间说“用户刚才在我这里选中了文字”，那就它了！
         const selectionResult = results.find(r => r.result?.isSelection);
         
         if (selectionResult) {
           bestResult = selectionResult.result;
         } else {
-          // 🥈 第二名：没人选中，那就找哪个房间抓到了像样的 Job Title
-          // 过滤掉 null 和空标题
+          // 过滤掉无效标题
           const validResults = results
             .map(r => r.result)
-            .filter(r => r && r.title && r.title !== 'LinkedIn' && !r.title.includes('Top job picks'));
+            .filter(r => {
+              if (!r || !r.title) return false;
+              const t = r.title.toLowerCase();
+              // ✨ 增强过滤：如果抓到的标题看起来像搜索词，就扔掉
+              const junkWords = ['linkedin', 'indeed', 'top job picks', 'jobs, employment', 'search'];
+              if (junkWords.some(w => t.includes(w)) && t.length < 50) return false;
+              return true;
+            });
           
-          if (validResults.length > 0) {
-            // 通常 H1 最准，取第一个找到有效标题的结果
-            bestResult = validResults[0];
-          }
+          if (validResults.length > 0) bestResult = validResults[0];
         }
 
-        // 应用结果
         if (bestResult) {
-          // 标题处理
           let finalTitle = bestResult.title;
           if (!bestResult.isSelection && finalTitle) {
-             // 如果是自动抓的，简单清洗一下
-             finalTitle = finalTitle.split(' | ')[0].replace('Top job picks for you', '');
+             // 清洗 Indeed 标题中可能出现的 " - job post" 等后缀
+             finalTitle = finalTitle.split(' - ')[0]; 
           }
           if (finalTitle) setTitle(finalTitle);
 
-          // 公司名处理
           if (bestResult.company) {
             setCompany(bestResult.company);
           } else {
-             // 兜底：如果没抓到公司，尝试用 URL 猜
              try {
                const domain = new URL(tab.url || '').hostname;
                const companyName = domain.replace('www.', '').split('.')[0];
-               if (companyName !== 'linkedin' && !company) {
+               if (!['linkedin', 'indeed'].includes(companyName)) {
                  setCompany(companyName.charAt(0).toUpperCase() + companyName.slice(1));
                }
              } catch (e) {}
           }
         } else {
-          // 🥉 实在没办法了，用浏览器顶部的 Tab Title 兜底
+          // 最后的兜底
           if (!title) setTitle(tab.title?.split(' | ')[0] || '');
         }
 
@@ -128,7 +141,41 @@ export const SidePanel = () => {
   };
 
   useEffect(() => {
+    // 1. 初始化时先抓一次
     fetchTabInfo();
+
+    // 2. 监听：当你在当前标签页内跳转 (比如在 LinkedIn 点了下一个职位)
+    const handleTabUpdate = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+      // 只有当 URL 变了，或者页面加载状态变成 'complete' 时才触发
+      if (changeInfo.url || changeInfo.status === 'complete') {
+        // 确认一下是当前窗口的当前标签页
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0] && tabs[0].id === tabId) {
+            // ⚠️ 关键点：LinkedIn 是单页应用 (SPA)，URL 变了之后 DOM 可能还没渲染完。
+            // 所以我们稍微等 1 秒再抓，保证抓到新的 H1
+            setTimeout(() => {
+              fetchTabInfo();
+            }, 1000); 
+          }
+        });
+      }
+    };
+
+    // 3. 监听：当你从别的标签页切回来 (比如从 Google 切回 LinkedIn)
+    const handleTabActivated = (activeInfo: chrome.tabs.TabActiveInfo) => {
+      // 切回来的时候，不需要延迟，直接抓
+      fetchTabInfo();
+    };
+
+    // 注册监听器
+    chrome.tabs.onUpdated.addListener(handleTabUpdate);
+    chrome.tabs.onActivated.addListener(handleTabActivated);
+
+    // 清理函数：组件卸载时移除监听，防止内存泄漏
+    return () => {
+      chrome.tabs.onUpdated.removeListener(handleTabUpdate);
+      chrome.tabs.onActivated.removeListener(handleTabActivated);
+    };
   }, []);
 
   const handleSave = () => {
@@ -167,7 +214,7 @@ export const SidePanel = () => {
     <div className="min-h-screen bg-slate-50 p-4 flex flex-col font-sans">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-          🧠 Job Saver
+          ⚡️ EzApply
         </h1>
         <button 
           onClick={fetchTabInfo} 
@@ -182,7 +229,7 @@ export const SidePanel = () => {
         <div className="mb-4 p-3 bg-blue-50 text-blue-700 text-xs rounded-lg flex gap-2 items-start">
           <MousePointerClick size={14} className="mt-0.5 shrink-0" />
           <span>
-            <b>Tip:</b> If auto-capture fails, <b>highlight the text</b> and click refresh 🔄.
+            <b>Tip:</b> If auto-capture fails, <b>highlight the text</b> on page & click refresh 🔄.
           </span>
         </div>
       )}
@@ -268,4 +315,4 @@ export const SidePanel = () => {
       </div>
     </div>
   );
-};
+}
