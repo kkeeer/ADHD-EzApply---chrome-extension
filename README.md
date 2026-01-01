@@ -1,4 +1,4 @@
-# ADHD Job Helper
+# EzApply: ADHD Apply Tracker
 
 A Chrome Extension to help users with ADHD capture and track job applications with minimal friction and gamified feedback.
 
