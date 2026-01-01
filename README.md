@@ -1,59 +1,67 @@
-# ADHD Job Helper
+# ⚡️ EzApply: ADHD Apply Tracker
 
-A Chrome Extension to help users with ADHD capture and track job applications with minimal friction and gamified feedback.
+> **Stop hoarding tabs. Start applying.** > A friction-free Chrome Extension designed for ADHD minds to capture, track, and gamify the job hunt.
 
-## Features
+![Version](https://img.shields.io/badge/version-1.2-blue) ![Privacy](https://img.shields.io/badge/privacy-local%20only-green)
 
-- **Side Panel Capture**: Quick form to capture job applications with auto-fill from current page
-- **Kanban Dashboard**: Visual board with three columns (Inbox, Applied, Archive)
-- **Drag & Drop**: Move jobs between columns with smooth animations
-- **Gamified Feedback**: Confetti celebration when moving jobs to "Applied"!
-- **Priority Tracking**: Mark high-priority jobs with 🔥 icon
-- **Local Storage**: All data stored locally using Chrome's storage API
+## 🧠 Why EzApply?
 
-## Tech Stack
+Job hunting is painful for ADHD brains: object permanence issues lead to 50+ open tabs, "apply later" becomes "never apply," and the lack of immediate feedback kills motivation.
 
-- React + Vite
-- TypeScript
-- Tailwind CSS
-- @dnd-kit for drag & drop
-- canvas-confetti for celebrations
-- lucide-react for icons
+**EzApply** fixes this by:
+1.  **Reducing Friction**: One-click capture from LinkedIn & Indeed.
+2.  **Preventing Hoarding**: Limits your "Inbox" to **10 jobs**—you *must* apply or delete to add more.
+3.  **Gamification**: Visual Kanban board with **confetti celebrations** 🎉 to hack your dopamine reward system.
 
-## Development
+## ✨ Key Features (v1.2)
 
-```bash
-# Install dependencies
-npm install
+### 🕵️‍♂️ Smart Capture
+* **Auto-Sync**: Automatically detects job details (Title, Company, URL) when you switch tabs or click new jobs on **LinkedIn** & **Indeed**.
+* **Manual Override**: Auto-capture failed? Just **highlight the text** on the page and click refresh.
+* **Notes**: Add salary, tech stack, or deadlines instantly.
 
-# Run development server
-npm run dev
+### 📋 Visual Workflow
+* **Anti-Hoarding Inbox**: Hard limit of 10 jobs. forces decision-making.
+* **Kanban Board**: Drag & Drop interface (Inbox → Applied → Archive).
+* **One-Click Declutter**: Overwhelmed by old applications? Use the **"Clear Archive"** button to instantly wipe your history and get a fresh start—guilt-free.
+* **Dopamine Hits**: Smooth animations and confetti effects when you move cards to "Applied".
 
-# Build for production
-npm run build
-```
+### 🛡️ Privacy First
+* **Local Storage**: All data lives 100% in your browser (`chrome.storage.local`).
+* **No Servers**: We don't collect, track, or sell your data.
 
-## Loading the Extension
+## 🛠 Tech Stack
 
-1. Build the extension: `npm run build`
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" (toggle in top right)
-4. Click "Load unpacked"
-5. Select the `dist` folder from this project
+Built with a modern, lightweight stack:
+* **Core**: React 18, TypeScript, Vite
+* **Styling**: Tailwind CSS
+* **Chrome API**: Manifest V3, Scripting API, Storage API
+* **Libraries**: `@dnd-kit` (Drag & Drop), `canvas-confetti`, `lucide-react`
 
-## Usage
+## 🚀 How to Install (Developer Mode)
 
-1. **Capture Jobs**: Click the extension icon to open the side panel, fill in job details, and click "Save to Inbox"
-2. **View Dashboard**: Click the dashboard icon in the side panel (or open `dashboard.html` directly)
-3. **Track Progress**: Drag jobs from Inbox → Applied → Archive
-4. **Celebrate**: Moving a job to "Applied" triggers confetti! 🎉
+Since this is a beta release, please install it manually:
 
-## Icons
+1.  **Download/Clone** this repository.
+2.  Run `npm install` and then `npm run build` to generate the `dist` folder.
+3.  Open Chrome and navigate to `chrome://extensions/`.
+4.  Toggle on **"Developer mode"** (top right corner).
+5.  Click **"Load unpacked"**.
+6.  Select the `dist` folder from this project.
 
-Place your extension icons in the `icons/` directory:
-- `icon16.png` (16x16 pixels)
-- `icon48.png` (48x48 pixels)
-- `icon128.png` (128x128 pixels)
+## 📖 Usage Guide
 
-You can create placeholder icons or use an icon generator tool.
+1.  **Capture**: Browse LinkedIn or Indeed. The extension auto-fills the job info. Add a note and click **"Save Job"**.
+2.  **Focus**: Open the Side Panel to see your "Inbox" count. If you hit 10, start applying!
+3.  **Track**: Click the "Open Board" icon.
+    * Drag jobs to **Applied** when done (Enjoy the confetti! 🎉).
+    * Drag to **Archive** or click the **Trash** icon to remove.
+4.  **Reset**: Use "Clear Archive" to declutter your mind periodically.
 
+## 🤝 Contributing
+
+Found a bug? Have an idea? Feel free to open an issue or contact via likeer0404@outlook.com!
+Designed with ❤️ for the neurodivergent community.
+
+---
+*EzApply © 2026*
