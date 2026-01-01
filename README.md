@@ -38,17 +38,6 @@ Built with a modern, lightweight stack:
 * **Chrome API**: Manifest V3, Scripting API, Storage API
 * **Libraries**: `@dnd-kit` (Drag & Drop), `canvas-confetti`, `lucide-react`
 
-## 🚀 How to Install (Developer Mode)
-
-Since this is a beta release, please install it manually:
-
-1.  **Download/Clone** this repository.
-2.  Run `npm install` and then `npm run build` to generate the `dist` folder.
-3.  Open Chrome and navigate to `chrome://extensions/`.
-4.  Toggle on **"Developer mode"** (top right corner).
-5.  Click **"Load unpacked"**.
-6.  Select the `dist` folder from this project.
-
 ## 📖 Usage Guide
 
 1.  **Capture**: Browse LinkedIn or Indeed. The extension auto-fills the job info. Add a note and click **"Save Job"**.
